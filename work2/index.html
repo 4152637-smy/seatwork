@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css">
+    <script src="../jquery.js"></script>
+    <script src="./bootstrap/js/bootstrap.min.js"></script>
+    <title>增删改</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <form class="form-horizontal" role="form">
+                <form class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label for="firstname" class="col-sm-2 control-label">姓名</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control nam" id="firstname" placeholder="请输入姓名">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastname" class="col-sm-2 control-label">年龄</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control age" id="lastname" placeholder="请输入年龄">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputPassword3" class="col-sm-2 control-label">性别</label>
+                        <div class="col-sm-10" style="vertical-align: middle;">
+                            <label class="radio-inline">
+                                <input type="radio" name="1" value="男">男
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" name="1" value="女">女
+                            </label>
+                        </div>
+                    </div>
+                </form>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-default add">添加</button>
+                <button type="submit" class="btn btn-default updat">确认更改</button>
+            </div>
+        </div>
+        <div class="row">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>年龄</th>
+                        <th>性别</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</body>
+<script>
+    // 点击提交添加数据
+    $(".add").on("click", function () {
+        let sex = $("input:radio:checked").val();
+        $.get("http://localhost:8080/default", {
+            username: $(".nam").val(),
+            age: $(".age").val(), sex
+        }, function (res) {
+            res == "添加成功" ? show() : null;
+        })
+    })
+    // show函数渲染页面
+    function show() {
+        $.post("http://localhost:8080/show", {}, function (res) {
+            $("tbody").empty();
+            res.forEach((item,index) => {
+                $("<tr/>").html(`
+                <td>${item.username}</td>
+                <td>${item.age}</td>
+                <td>${item.sex}</td>
+                <td id="${item._id}">
+                    <span class="glyphicon glyphicon-pencil" onclick="update(this)"></span>&emsp;
+                    <span class="glyphicon glyphicon-trash" onclick="del(this)"></span>
+                </td>
+                `).appendTo($("tbody"))
+            });
+            $(".nam").val("");
+            $(".age").val("");
+            $("input:radio").prop("checked",false)
+        })
+    }
+    show()
+    // 点击删除
+    function del(ele) {
+        let id = $(ele).parent().prop('id')
+        $.get("http://localhost:8080/del",{id},function(res){
+            res=="删除成功"?show():null;
+        })
+    }
+    // 点击更改反显
+    $(".updat").prop("disabled",true); // 确认修改默认禁用
+    var id; // 声明全局变量id，或者用本地存储也可以
+    function update(ele) {
+        id = $(ele).parent().prop("id");
+        console.log(id);
+        let nam = $(ele).parent().prev().prev().prev().text();
+        let age = $(ele).parent().prev().prev().text();
+        let sex = $(ele).parent().prev().text();
+        $(".nam").val(nam);
+        $(".age").val(age)
+        $("input:radio").each((index,item)=>{
+            if($(item).prop("value")==sex){
+                $(item).prop("checked",true)
+            };
+        })
+        $(".updat").prop("disabled",false); // 修改正常可用
+        $(".add").prop("disabled",true);    // 添加不可用
+    }
+    // 点击确认修改
+    $(".updat").on("click",function(){
+        let sex = $("input:radio:checked").val();
+        $.get("http://localhost:8080/update", {
+            username: $(".nam").val(),
+            age: $(".age").val(), sex,id
+        }, function (res) {
+            res == "成功" ? show() : alert(res);
+            $(".add").prop("disabled",false);   // 添加正常可用
+            $(".updat").prop("disabled",true);  // 修改不可用
+        })
+    })
+</script>
+
+</html> 

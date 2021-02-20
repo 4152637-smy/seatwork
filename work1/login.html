@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+</head>
+<body>
+    用户名：<input type="text" class="nam">
+    密码：<input type="text" class="pas">
+    <button>登录</button>
+</body>
+<script src="../jquery.js"></script>
+<script>
+    $("button").on("click",function(){
+        $.get("http://localhost:8088/login",{
+            username:$(".nam").val(),
+            password:$(".pas").val()
+        },function(res){
+            res=="登录成功"?window.location.href="./home.html":alert(res);
+        })
+    })
+</script>
+</html>
