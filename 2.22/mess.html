@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .wrap {
+            width: 300px;
+            margin: 0 auto;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            padding: 0 30px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin: 10px 0;
+            resize: none;
+        }
+
+        button {
+            background: skyblue;
+            color: white;
+            height: 36px;
+            letter-spacing: 20px;
+            text-align: center;
+        }
+
+        h3 {
+            text-align: center;
+        }
+
+        ul {
+            border-top: 1px dotted palevioletred;
+            border-bottom: 1px dotted palevioletred;
+            width: 400px;
+            margin: 0 auto;
+            list-style: none;
+        }
+
+        li {
+            margin-bottom: 2px;
+            background: papayawhip;
+            border-radius: 10px;
+        }
+        li p{
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>欢迎评论留言</h3>
+    <div class="wrap">
+        <label for="">
+            <input type="text" class="ipt" placeholder="匿名用户">点击输入笔名
+        </label>
+        <textarea id="text" placeholder="好的文笔可以带我们领略不同的意境，请留下你美好文笔"></textarea>
+        <button class="sub">提交</button>
+    </div>
+
+    <h3>文人墨客的留言</h3>
+    <ul>
+    </ul>
+</body>
+<script src="./jquery.js"></script>
+<script>
+
+
+
+    // 添加留言
+    $(".sub").on("click", function () {
+        let username = $(".ipt").val()
+        username = username==""?"匿名用户":username;
+        let time = timer();
+        let text = $("#text").val()
+        if (text != "") {
+            $.get("http://localhost:8578/add", { username, text, time }, function (res) {
+                res.status == 1 ? show() : null;
+                $(".ipt").val("");
+                $("#text").val("")
+            })
+        }else{
+            alert("留言内容不可为空")
+        }
+    });
+    // 时间戳
+    function timer() {
+        return new Date().toLocaleString();
+    };
+    // show渲染页面
+    function show() {
+        $.get("http://localhost:8578/show", {}, function (res) {
+            $("ul").empty();
+            $.each(res, (index, item) => {
+                $("<li/>").html(`
+                    <p>
+                        <span>${item.username}</span>
+                        <span>${item.time}</span>
+                    </p>
+                    <p>
+                        ${item.text}
+                        <span onclick="del(this)" id=${item._id}>删除<span/>
+                    </p>
+                `).appendTo("ul");
+            })
+        })
+    };
+    show();
+    // 删除留言
+    function del(ele){
+        let id = $(ele).attr("id");
+        $.get("http://localhost:8578/del",{id},function(res){
+            res.status==1?show():null;
+        })
+    }
+</script>
+
+</html>

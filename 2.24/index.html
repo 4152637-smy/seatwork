@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生管理</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        body{
+            background: skyblue;
+        }
+        .wrap{
+            width: 800px;
+            border: 1px dotted palevioletred;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            height: 360px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        hr{
+            margin: 20px 0;
+        }
+        .searwrap{
+            width: 460px;
+            height: 30px;
+            margin: 0 auto;
+            margin-bottom: 10px;
+        }
+        table{
+            width: 800px;
+            margin: 0 auto;
+        }
+        .seaript{
+            width: 200px;
+            height: 25px;
+            margin-right: 10px;
+        }
+        .sear,.pdel{
+            width: 60px;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>学生管理系统</h1>
+        <div>
+            学生姓名：<input type="text" class="username">
+        </div>
+        <div>
+            学生年龄：<input type="text" class="age">
+        </div>
+        <div>
+            学生电话：<input type="text" class="phone">
+        </div>
+        <div>
+            学生性别：<input type="radio" value="男" class="sex" name="sex">男&emsp;
+            <input type="radio"value="女" class="sex" name="sex">女
+        </div>
+        <div>
+            学生籍贯（省）：
+            <select class="sheng">
+                <option selected>请选择</option>
+                <option value="河南">河南</option>
+                <option value="重庆">重庆</option>
+                <option value="山东">山东</option>
+                <option value="河北">河北</option>
+            </select>
+        </div>
+        <div>
+            <button class="add">确认添加</button>
+            <button class="alter">确认修改</button>
+        </div>
+    </div>
+    <hr>
+        <div class="searwrap">
+            <input type="text" class="seaript" placeholder="搜索请输入学生姓名">
+            <button class="sear">搜索</button>
+            <button class="pdel">批量删除</button>
+        </div>
+        <table border="1" cellspacing="1" cellpadding="1" >
+            <caption>学生信息</caption>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" class="fu"></th>
+                    <th>学生姓名</th>
+                    <th>学生年龄</th>
+                    <th>学生电话</th>
+                    <th>学生性别</th>
+                    <th>学生籍贯（省）</th>
+                    <th>学生操作</th>
+                </tr>
+            </thead>
+            <tbody style="text-align: center;">
+                <!-- <tr>
+                    <td><input type="checkbox" class="check"></td>
+                    <td>王大大</td>
+                    <td>18</td>
+                    <td>13988976672</td>
+                    <td>女</td>
+                    <td>河南</td>
+                    <td>
+                        <button>修改</button>
+                        <button>删除</button>
+                    </td>
+                </tr> -->
+            </tbody>
+        </table>
+</body>
+<script src="./jquery.js"></script>
+<script>
+    // show接口
+    function show() {
+        $.get("http://localhost:8080/show",{},function(res){
+            sho(res);
+            $(".username").val("");
+            $(".age").val("");
+            $(".phone").val("");
+            $(".sex").prop("checked",false)
+            $(".sheng").children().eq(0).prop("selected",true)
+            fan()
+        })
+    }
+    show()
+    // sho 渲染页面
+    function sho(ele) {
+        $("tbody").empty();
+        ele.forEach(item => {
+            $("<tr/>").html(`
+                <td><input type="checkbox" class="son" id=${item._id}></td>
+                <td>${item.username}</td>
+                <td>${item.age}</td>
+                <td>${item.phone}</td>
+                <td>${item.sex}</td>
+                <td>${item.sheng}</td>
+                <td id=${item._id}>
+                    <button onclick="gai(this)">修改</button>
+                    <button onclick="del(this)">删除</button>
+                </td>
+            `).appendTo("tbody");
+        });
+    }
+    // 确认添加
+    $(".add").click(function(){
+        let username = $(".username").val();
+        let age = $(".age").val();
+        let phone = $(".phone").val();
+        let sheng = $(".sheng").val();
+        let sex = $(".sex:checked").val();
+        $.get("http://localhost:8080/add",{username,age,phone,sheng,sex},function(res){
+            res.status==1?show():null;
+        })
+    })
+    // 删除
+    function del(ele){
+        let id = $(ele).parent().prop("id")
+        $.get("http://localhost:8080/del",{id},function(res){
+            res.status==1?show():null;
+        })
+    }
+    // 批量删除
+    $(".pdel").click(function(){
+        let arr = [];
+        $(".son:checked").each((index,item)=>{
+            arr.push($(item).prop("id"));
+        })
+        $.get("http://localhost:8080/pdel",{arr:arr.join()},function(res){
+            res.ok==1?show():null
+        })
+    })
+    // 修改反显
+    function gai(ele){
+        localStorage.setItem("id",$(ele).parent().prop("id"));
+        $(".username").val($(ele).parent().parent().children().eq(1).html());
+        $(".age").val($(ele).parent().parent().children().eq(2).html());
+        $(".phone").val($(ele).parent().parent().children().eq(3).html());
+        $(".sex").each((index,item) => {
+            if($(item).val()==$(ele).parent().parent().children().eq(4).html()){
+                $(item).prop("checked",true)
+            }else{
+                $(item).prop("checked",false)
+            }
+        });
+        $(".sheng").children().each((index,item)=>{
+            if($(item).val()==$(ele).parent().parent().children().eq(5).html()){
+                $(item).prop("selected",true)
+            }else{
+                $(item).prop("selected",true)
+            }
+        })
+        $(".alter").prop("disabled",false);
+        $(".add").prop("disabled",true);
+    }
+    // 确认修改
+    $(".alter").click(function(){
+        let id = localStorage.getItem('id');
+        $.get("http://localhost:8080/alter",{
+            id,
+            username:$(".username").val(),
+            age:$(".age").val(),
+            phone:$(".phone").val(),
+            sheng:$(".sheng").val(),
+            sex:$(".sex:checked").val(),
+        },function(res){
+            res.ok==1?show():null;
+            $(".alter").prop("disabled",true);
+            $(".add").prop("disabled",false);
+        })
+    })
+    // 没有启用修改时将修改按钮禁用
+    $(".alter").prop("disabled",true);
+    // 全选
+    $(".fu").click(function(){
+        $(".son").prop("checked",$(this).prop("checked"))
+    })
+    // 反选
+    function fan(){
+        $(".son").click(function(){
+            if($(".son:checked").length==$(".son").length){
+                $(".fu").prop("checked",true)
+            }else{
+                $(".fu").prop("checked",false)
+            }
+        })
+    };
+</script>
+</html>
